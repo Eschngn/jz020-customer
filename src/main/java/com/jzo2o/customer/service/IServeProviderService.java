@@ -128,4 +128,11 @@ public interface IServeProviderService extends IService<ServeProvider> {
      * @return
      */
     ServeProvider registerInstitution(InstitutionRegisterReqDTO institutionRegisterReqDTO);
+
+    /**
+     * 重置密码
+     * @param institutionResetPasswordReqDTO
+     * @return
+     */
+    ServeProvider resetPassword(InstitutionResetPasswordReqDTO institutionResetPasswordReqDTO);
 }

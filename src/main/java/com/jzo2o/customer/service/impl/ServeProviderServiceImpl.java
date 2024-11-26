@@ -10,6 +10,7 @@ import com.jzo2o.api.customer.dto.request.ServerProviderUpdateStatusReqDTO;
 import com.jzo2o.api.customer.dto.response.ServeProviderResDTO;
 import com.jzo2o.api.customer.dto.response.ServeProviderSimpleResDTO;
 import com.jzo2o.api.publics.SmsCodeApi;
+import com.jzo2o.api.publics.dto.response.BooleanResDTO;
 import com.jzo2o.common.constants.CommonStatusConstants;
 import com.jzo2o.common.constants.UserType;
 import com.jzo2o.common.enums.EnableStatusEnum;
@@ -226,6 +227,40 @@ public class ServeProviderServiceImpl extends ServiceImpl<ServeProviderMapper, S
         String encodePassword=passwordEncoder.encode(institutionRegisterReqDTO.getPassword());
         ServeProvider serveProvider = add(institutionRegisterReqDTO.getPhone(), UserType.INSTITUTION, encodePassword);
         return serveProvider;
+    }
+
+    /**
+     * 重置密码
+     * @param institutionResetPasswordReqDTO
+     * @return
+     */
+    @Override
+    public ServeProvider resetPassword(InstitutionResetPasswordReqDTO institutionResetPasswordReqDTO) {
+        // 校验手机号是否存在
+        ServeProvider existServeProvider = lambdaQuery().eq(ServeProvider::getPhone, institutionResetPasswordReqDTO.getPhone()).one();
+        if(ObjectUtils.isNull(existServeProvider)){
+            throw new BadRequestException("该账号未注册");
+        }
+        // 验证码校验
+        if(ObjectUtils.isEmpty(institutionResetPasswordReqDTO.getVerifyCode())){
+            throw new BadRequestException("验证码不能为空");
+        }
+        BooleanResDTO verifyResult = smsCodeApi.verify(institutionResetPasswordReqDTO.getPhone(), SmsBussinessTypeEnum.INSTITUTION_RESET_PASSWORD
+                , institutionResetPasswordReqDTO.getVerifyCode());
+        if(!verifyResult.getIsSuccess()){
+            throw new BadRequestException("验证码错误,请重新输入");
+        }
+        // 修改密码
+        BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder();
+        String encode = passwordEncoder.encode(institutionResetPasswordReqDTO.getPassword());
+        boolean update = lambdaUpdate().eq(ServeProvider::getPhone, institutionResetPasswordReqDTO.getPhone())
+                .set(ServeProvider::getPassword, encode)
+                .update();
+        if(!update){
+            throw new BadRequestException("重置密码失败");
+        }
+        existServeProvider.setPassword(encode);
+        return existServeProvider;
     }
 
     /**
