@@ -35,6 +35,7 @@ import com.jzo2o.customer.model.dto.response.ServeProviderListResDTO;
 import com.jzo2o.customer.service.*;
 import com.jzo2o.mvc.utils.UserContext;
 import com.jzo2o.mysql.utils.PageHelperUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -204,6 +205,27 @@ public class ServeProviderServiceImpl extends ServiceImpl<ServeProviderMapper, S
             AgencyCertification agencyCertification = agencyCertificationService.getById(providerId);
             return BeanUtil.toBean(agencyCertification,CertificationStatusDTO.class);
         }
+    }
+
+    /**
+     * 机构注册
+     * @param institutionRegisterReqDTO
+     * @return
+     */
+    @Override
+    public ServeProvider registerInstitution(InstitutionRegisterReqDTO institutionRegisterReqDTO) {
+        if(StringUtils.isEmpty(institutionRegisterReqDTO.getVerifyCode())){
+            throw new BadRequestException("验证码不能为空");
+        }
+        Boolean verifyResult = smsCodeApi.verify(institutionRegisterReqDTO.getPhone(), SmsBussinessTypeEnum.INSTITION_REGISTER
+                , institutionRegisterReqDTO.getVerifyCode()).getIsSuccess();
+        if(!verifyResult){
+            throw new BadRequestException("验证码错误,请重新输入");
+        }
+        BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder();
+        String encodePassword=passwordEncoder.encode(institutionRegisterReqDTO.getPassword());
+        ServeProvider serveProvider = add(institutionRegisterReqDTO.getPhone(), UserType.INSTITUTION, encodePassword);
+        return serveProvider;
     }
 
     /**
