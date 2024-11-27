@@ -38,6 +38,8 @@ import java.util.List;
 @Service
 public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, AddressBook> implements IAddressBookService {
 
+    @Resource
+    private MapApi mapApi;
     @Override
     public List<AddressBookResDTO> getByUserIdAndCity(Long userId, String city) {
 
@@ -58,7 +60,16 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
      */
     @Override
     public AddressBook addAddress(AddressBookUpsertReqDTO addressBookUpsertReqDTO) {
+        // 获取经纬度
+        String address = addressBookUpsertReqDTO.getAddress();
+        LocationResDTO locationByAddress = mapApi.getLocationByAddress(address);
+        String location = locationByAddress.getLocation();
+        Double lon=Double.valueOf(location.split(",")[0]);
+        Double lat=Double.valueOf(location.split(",")[1]);
+
         AddressBook addressBook = BeanUtils.toBean(addressBookUpsertReqDTO, AddressBook.class);
+        addressBook.setLon(lon);
+        addressBook.setLat(lat);
         Long userId = UserContext.currentUserId();
         addressBook.setUserId(userId);
         // 默认地址处理
