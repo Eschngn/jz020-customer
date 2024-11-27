@@ -168,4 +168,16 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
         }
         return addressBook;
     }
+
+    @Override
+    public AddressBookResDTO getDefaultAddress() {
+        Long userId = UserContext.currentUserId();
+        AddressBook addressBook = lambdaQuery().eq(AddressBook::getUserId, userId)
+                .eq(AddressBook::getIsDefault, 1)
+                .one();
+        if(ObjectUtils.isNull(addressBook)){
+            return null;
+        }
+        return BeanUtils.toBean(addressBook,AddressBookResDTO.class);
+    }
 }

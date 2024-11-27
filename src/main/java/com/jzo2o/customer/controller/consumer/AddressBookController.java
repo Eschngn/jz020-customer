@@ -1,5 +1,6 @@
 package com.jzo2o.customer.controller.consumer;
 
+import com.jzo2o.api.customer.dto.response.AddressBookResDTO;
 import com.jzo2o.common.model.PageResult;
 import com.jzo2o.customer.model.domain.AddressBook;
 import com.jzo2o.customer.model.dto.request.AddressBookPageQueryReqDTO;
@@ -62,5 +63,10 @@ public class AddressBookController {
     @ApiOperation("批量删除地址")
     public void deleteBatch(@RequestBody List<Long> ids){
         addressBookService.removeByIds(ids);
+    }
+    @GetMapping("/defaultAddress")
+    @ApiOperation("获取默认地址")
+    public AddressBookResDTO getDefaultAddress(){
+        return addressBookService.getDefaultAddress();
     }
 }

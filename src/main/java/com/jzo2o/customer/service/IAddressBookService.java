@@ -58,4 +58,10 @@ public interface IAddressBookService extends IService<AddressBook> {
      * @return
      */
     AddressBook setDefault(Long id, Integer flag);
+
+    /**
+     * 获取默认地址
+     * @return
+     */
+    AddressBookResDTO getDefaultAddress();
 }
