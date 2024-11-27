@@ -102,4 +102,43 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
         return PageHelperUtils.selectPage(addressBookPageQueryReqDTO,
                 ()->baseMapper.queryAddressListByUserId(UserContext.currentUserId()));
     }
+
+    /**
+     * 编辑地址簿
+     * @param id
+     * @param addressBookUpsertReqDTO
+     * @return
+     */
+    @Override
+    public AddressBook update(Long id, AddressBookUpsertReqDTO addressBookUpsertReqDTO) {
+        // 经纬度设置
+        String address = addressBookUpsertReqDTO.getAddress();
+        String location = mapApi.getLocationByAddress(address).getLocation();
+        Double lon=Double.valueOf(location.split(",")[0]);
+        Double lat=Double.valueOf(location.split(",")[1]);
+        AddressBook addressBook = BeanUtils.toBean(addressBookUpsertReqDTO, AddressBook.class);
+        addressBook.setLon(lon);
+        addressBook.setLat(lat);
+        Long userId = UserContext.currentUserId();
+        // 默认地址处理
+        if(addressBook.getIsDefault().equals(1)){
+            AddressBook defaultAddress = lambdaQuery()
+                    .eq(AddressBook::getUserId, userId)
+                    .eq(AddressBook::getIsDefault, 1)
+                    .ne(AddressBook::getId,id)
+                    .one();
+            // 存在默认地址,将其设置为非默认
+            if(ObjectUtils.isNotNull(defaultAddress)){
+                defaultAddress.setIsDefault(0);
+                updateById(defaultAddress);
+            }
+        }
+        // 更新地址
+        addressBook.setId(id);
+        boolean updated = updateById(addressBook);
+        if(!updated){
+            throw new BadRequestException("编辑地址簿失败");
+        }
+        return addressBook;
+    }
 }

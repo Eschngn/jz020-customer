@@ -42,4 +42,12 @@ public interface IAddressBookService extends IService<AddressBook> {
      * @return
      */
     PageResult<AddressResDTO> pageAddress(AddressBookPageQueryReqDTO addressBookPageQueryReqDTO);
+
+    /**
+     * 编辑地址簿
+     * @param id
+     * @param addressBookUpsertReqDTO
+     * @return
+     */
+    AddressBook update(Long id,AddressBookUpsertReqDTO addressBookUpsertReqDTO);
 }

@@ -38,4 +38,16 @@ public class AddressBookController {
     public PageResult<AddressResDTO> page(AddressBookPageQueryReqDTO addressBookPageQueryReqDTO){
         return addressBookService.pageAddress(addressBookPageQueryReqDTO);
     }
+
+    @GetMapping("/{id}")
+    @ApiOperation("根据id查询地址簿")
+    public AddressBook getById(@PathVariable("id")Long id){
+        return addressBookService.getById(id);
+    }
+
+    @PutMapping("/{id}")
+    @ApiOperation("编辑地址薄")
+    public AddressBook update(@PathVariable("id") Long id, @RequestBody AddressBookUpsertReqDTO addressBookUpsertReqDTO) {
+        return addressBookService.update(id, addressBookUpsertReqDTO);
+    }
 }
