@@ -50,4 +50,10 @@ public class AddressBookController {
     public AddressBook update(@PathVariable("id") Long id, @RequestBody AddressBookUpsertReqDTO addressBookUpsertReqDTO) {
         return addressBookService.update(id, addressBookUpsertReqDTO);
     }
+
+    @PutMapping("/default")
+    @ApiOperation("设置默认地址")
+    public AddressBook setDefault(@RequestParam("id") Long id, @RequestParam("flag") Integer flag){
+        return addressBookService.setDefault(id, flag);
+    }
 }

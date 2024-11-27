@@ -141,4 +141,31 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
         }
         return addressBook;
     }
+
+    /**
+     * 设置默认地址
+     * @param id
+     * @param flag
+     * @return
+     */
+    @Override
+    public AddressBook setDefault(Long id, Integer flag) {
+        AddressBook defaultAddress = lambdaQuery()
+                .eq(AddressBook::getUserId, UserContext.currentUserId())
+                .eq(AddressBook::getIsDefault, 1)
+                .ne(AddressBook::getId,id)
+                .one();
+        // 存在默认地址,将其设置为非默认
+        if(ObjectUtils.isNotNull(defaultAddress)){
+            defaultAddress.setIsDefault(0);
+            updateById(defaultAddress);
+        }
+        AddressBook addressBook = getById(id);
+        addressBook.setIsDefault(flag);
+        boolean updated = updateById(addressBook);
+        if(!updated){
+            throw new BadRequestException("编辑地址簿失败");
+        }
+        return addressBook;
+    }
 }

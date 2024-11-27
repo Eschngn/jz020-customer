@@ -50,4 +50,12 @@ public interface IAddressBookService extends IService<AddressBook> {
      * @return
      */
     AddressBook update(Long id,AddressBookUpsertReqDTO addressBookUpsertReqDTO);
+
+    /**
+     * 设置默认地址
+     * @param id
+     * @param flag
+     * @return
+     */
+    AddressBook setDefault(Long id, Integer flag);
 }
