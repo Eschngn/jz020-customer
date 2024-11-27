@@ -11,6 +11,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Wilson
@@ -55,5 +56,11 @@ public class AddressBookController {
     @ApiOperation("设置默认地址")
     public AddressBook setDefault(@RequestParam("id") Long id, @RequestParam("flag") Integer flag){
         return addressBookService.setDefault(id, flag);
+    }
+
+    @DeleteMapping("/batch")
+    @ApiOperation("批量删除地址")
+    public void deleteBatch(@RequestBody List<Long> ids){
+        addressBookService.removeByIds(ids);
     }
 }
