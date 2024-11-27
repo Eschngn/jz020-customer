@@ -17,8 +17,10 @@ import com.jzo2o.customer.mapper.AddressBookMapper;
 import com.jzo2o.customer.model.domain.AddressBook;
 import com.jzo2o.customer.model.dto.request.AddressBookPageQueryReqDTO;
 import com.jzo2o.customer.model.dto.request.AddressBookUpsertReqDTO;
+import com.jzo2o.customer.model.dto.response.AddressResDTO;
 import com.jzo2o.customer.service.IAddressBookService;
 import com.jzo2o.mvc.utils.UserContext;
+import com.jzo2o.mysql.utils.PageHelperUtils;
 import com.jzo2o.mysql.utils.PageUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,5 +90,16 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
             throw new BadRequestException("地址添加失败!");
         }
         return addressBook;
+    }
+
+    /**
+     * 地址簿分页查询
+     * @param addressBookPageQueryReqDTO
+     * @return
+     */
+    @Override
+    public PageResult<AddressResDTO> pageAddress(AddressBookPageQueryReqDTO addressBookPageQueryReqDTO) {
+        return PageHelperUtils.selectPage(addressBookPageQueryReqDTO,
+                ()->baseMapper.queryAddressListByUserId(UserContext.currentUserId()));
     }
 }

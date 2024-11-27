@@ -6,6 +6,7 @@ import com.jzo2o.customer.model.domain.AddressBook;
 import com.jzo2o.customer.model.dto.request.AddressBookPageQueryReqDTO;
 import com.jzo2o.customer.model.dto.request.AddressBookUpsertReqDTO;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jzo2o.customer.model.dto.response.AddressResDTO;
 
 import java.util.List;
 
@@ -34,4 +35,11 @@ public interface IAddressBookService extends IService<AddressBook> {
      * @return
      */
     AddressBook addAddress(AddressBookUpsertReqDTO addressBookUpsertReqDTO);
+
+    /**
+     * 地址簿分页查询
+     * @param addressBookPageQueryReqDTO
+     * @return
+     */
+    PageResult<AddressResDTO> pageAddress(AddressBookPageQueryReqDTO addressBookPageQueryReqDTO);
 }
