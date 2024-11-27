@@ -17,8 +17,10 @@ import com.jzo2o.customer.mapper.AddressBookMapper;
 import com.jzo2o.customer.model.domain.AddressBook;
 import com.jzo2o.customer.model.dto.request.AddressBookPageQueryReqDTO;
 import com.jzo2o.customer.model.dto.request.AddressBookUpsertReqDTO;
+import com.jzo2o.customer.model.dto.response.AddressResDTO;
 import com.jzo2o.customer.service.IAddressBookService;
 import com.jzo2o.mvc.utils.UserContext;
+import com.jzo2o.mysql.utils.PageHelperUtils;
 import com.jzo2o.mysql.utils.PageUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,8 @@ import java.util.List;
 @Service
 public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, AddressBook> implements IAddressBookService {
 
+    @Resource
+    private MapApi mapApi;
     @Override
     public List<AddressBookResDTO> getByUserIdAndCity(Long userId, String city) {
 
@@ -58,7 +62,16 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
      */
     @Override
     public AddressBook addAddress(AddressBookUpsertReqDTO addressBookUpsertReqDTO) {
+        // 获取经纬度
+        String address = addressBookUpsertReqDTO.getAddress();
+        LocationResDTO locationByAddress = mapApi.getLocationByAddress(address);
+        String location = locationByAddress.getLocation();
+        Double lon=Double.valueOf(location.split(",")[0]);
+        Double lat=Double.valueOf(location.split(",")[1]);
+
         AddressBook addressBook = BeanUtils.toBean(addressBookUpsertReqDTO, AddressBook.class);
+        addressBook.setLon(lon);
+        addressBook.setLat(lat);
         Long userId = UserContext.currentUserId();
         addressBook.setUserId(userId);
         // 默认地址处理
@@ -77,5 +90,94 @@ public class AddressBookServiceImpl extends ServiceImpl<AddressBookMapper, Addre
             throw new BadRequestException("地址添加失败!");
         }
         return addressBook;
+    }
+
+    /**
+     * 地址簿分页查询
+     * @param addressBookPageQueryReqDTO
+     * @return
+     */
+    @Override
+    public PageResult<AddressResDTO> pageAddress(AddressBookPageQueryReqDTO addressBookPageQueryReqDTO) {
+        return PageHelperUtils.selectPage(addressBookPageQueryReqDTO,
+                ()->baseMapper.queryAddressListByUserId(UserContext.currentUserId()));
+    }
+
+    /**
+     * 编辑地址簿
+     * @param id
+     * @param addressBookUpsertReqDTO
+     * @return
+     */
+    @Override
+    public AddressBook update(Long id, AddressBookUpsertReqDTO addressBookUpsertReqDTO) {
+        // 经纬度设置
+        String address = addressBookUpsertReqDTO.getAddress();
+        String location = mapApi.getLocationByAddress(address).getLocation();
+        Double lon=Double.valueOf(location.split(",")[0]);
+        Double lat=Double.valueOf(location.split(",")[1]);
+        AddressBook addressBook = BeanUtils.toBean(addressBookUpsertReqDTO, AddressBook.class);
+        addressBook.setLon(lon);
+        addressBook.setLat(lat);
+        Long userId = UserContext.currentUserId();
+        // 默认地址处理
+        if(addressBook.getIsDefault().equals(1)){
+            AddressBook defaultAddress = lambdaQuery()
+                    .eq(AddressBook::getUserId, userId)
+                    .eq(AddressBook::getIsDefault, 1)
+                    .ne(AddressBook::getId,id)
+                    .one();
+            // 存在默认地址,将其设置为非默认
+            if(ObjectUtils.isNotNull(defaultAddress)){
+                defaultAddress.setIsDefault(0);
+                updateById(defaultAddress);
+            }
+        }
+        // 更新地址
+        addressBook.setId(id);
+        boolean updated = updateById(addressBook);
+        if(!updated){
+            throw new BadRequestException("编辑地址簿失败");
+        }
+        return addressBook;
+    }
+
+    /**
+     * 设置默认地址
+     * @param id
+     * @param flag
+     * @return
+     */
+    @Override
+    public AddressBook setDefault(Long id, Integer flag) {
+        AddressBook defaultAddress = lambdaQuery()
+                .eq(AddressBook::getUserId, UserContext.currentUserId())
+                .eq(AddressBook::getIsDefault, 1)
+                .ne(AddressBook::getId,id)
+                .one();
+        // 存在默认地址,将其设置为非默认
+        if(ObjectUtils.isNotNull(defaultAddress)){
+            defaultAddress.setIsDefault(0);
+            updateById(defaultAddress);
+        }
+        AddressBook addressBook = getById(id);
+        addressBook.setIsDefault(flag);
+        boolean updated = updateById(addressBook);
+        if(!updated){
+            throw new BadRequestException("编辑地址簿失败");
+        }
+        return addressBook;
+    }
+
+    @Override
+    public AddressBookResDTO getDefaultAddress() {
+        Long userId = UserContext.currentUserId();
+        AddressBook addressBook = lambdaQuery().eq(AddressBook::getUserId, userId)
+                .eq(AddressBook::getIsDefault, 1)
+                .one();
+        if(ObjectUtils.isNull(addressBook)){
+            return null;
+        }
+        return BeanUtils.toBean(addressBook,AddressBookResDTO.class);
     }
 }
