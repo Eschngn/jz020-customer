@@ -18,6 +18,7 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <elasticsearch.version>7.17.7</elasticsearch.version>
     </properties>
 
     <dependencies>
@@ -66,24 +67,25 @@
             <scope>test</scope>
         </dependency>
 
-        <!--canal-->
-<!--        <dependency>-->
-<!--            <groupId>com.jzo2o</groupId>-->
-<!--            <artifactId>jzo2o-canal-sync</artifactId>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.jzo2o</groupId>-->
-<!--            <artifactId>jzo2o-es</artifactId>-->
-<!--        </dependency>-->
+<!--        canal-->
+        <dependency>
+            <groupId>com.jzo2o</groupId>
+            <artifactId>jzo2o-canal-sync</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.jzo2o</groupId>
+            <artifactId>jzo2o-es</artifactId>
+        </dependency>
         <dependency>
             <groupId>cn.xiaozhibang</groupId>
             <artifactId>evaluation-sdk</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.jzo2o</groupId>-->
-<!--            <artifactId>jzo2o-xxl-job</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.jzo2o</groupId>
+            <artifactId>jzo2o-xxl-job</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -100,7 +102,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>com.jzo2o.customer.CustomerApplicaiton</mainClass>
+                    <mainClass>com.jzo2o.customer.CustomerApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>
