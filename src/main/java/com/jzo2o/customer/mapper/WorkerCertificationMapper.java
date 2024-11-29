@@ -2,6 +2,9 @@ package com.jzo2o.customer.mapper;
 
 import com.jzo2o.customer.model.domain.WorkerCertification;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jzo2o.customer.model.dto.response.WorkerCertificationAuditResDTO;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +16,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface WorkerCertificationMapper extends BaseMapper<WorkerCertification> {
 
+    /**
+     * 查询服务人员认证信息
+     * @return
+     */
+    List<WorkerCertificationAuditResDTO> queryWorkerCertification();
 }
