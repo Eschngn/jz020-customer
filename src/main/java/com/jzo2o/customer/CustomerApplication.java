@@ -12,10 +12,10 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @Slf4j
 @EnableCaching
 @MapperScan("com.jzo2o.customer.mapper")
-public class CustomerApplicaiton {
+public class CustomerApplication {
 
     public static void main(String[] args) {
-        new SpringApplicationBuilder(CustomerApplicaiton.class)
+        new SpringApplicationBuilder(CustomerApplication.class)
                 .build(args)
                 .run(args);
         log.info("家政服务-客户中心启动");

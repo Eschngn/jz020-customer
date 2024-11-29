@@ -1,14 +1,18 @@
 package com.jzo2o.customer.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jzo2o.common.expcetions.BadRequestException;
 import com.jzo2o.customer.enums.CertificationStatusEnum;
 import com.jzo2o.customer.mapper.AgencyCertificationMapper;
 import com.jzo2o.customer.model.domain.AgencyCertification;
 import com.jzo2o.customer.model.dto.AgencyCertificationUpdateDTO;
+import com.jzo2o.customer.model.dto.request.AgencyCertificationAuditAddReqDTO;
 import com.jzo2o.customer.service.IAgencyCertificationService;
+import com.jzo2o.mvc.utils.UserContext;
 import org.springframework.stereotype.Service;
 
 /**
@@ -41,6 +45,24 @@ public class AgencyCertificationServiceImpl extends ServiceImpl<AgencyCertificat
                 .set(ObjectUtil.isNotEmpty(agencyCertificationUpdateDTO.getBusinessLicense()), AgencyCertification::getBusinessLicense, agencyCertificationUpdateDTO.getBusinessLicense())
                 .set(ObjectUtil.isNotEmpty(agencyCertificationUpdateDTO.getCertificationTime()), AgencyCertification::getCertificationTime, agencyCertificationUpdateDTO.getCertificationTime());
         super.update(updateWrapper);
+    }
+
+    @Override
+    public AgencyCertification submitAuth(AgencyCertificationAuditAddReqDTO agencyCertificationAuditAddReqDTO) {
+        // 机构人员 id
+        Long workerId = UserContext.currentUserId();
+        // dto转换为实体
+        AgencyCertification agencyCertification = BeanUtil.toBean(agencyCertificationAuditAddReqDTO, AgencyCertification.class);
+        agencyCertification.setId(workerId);
+        // 设置认证状态为认证中
+        agencyCertification.setCertificationStatus(1);
+        // 保存
+        boolean savedOrUpdate = saveOrUpdate(agencyCertification);
+        if(!savedOrUpdate){
+            throw new BadRequestException("认证申请失败");
+        }
+        return agencyCertification;
+
     }
 
 
