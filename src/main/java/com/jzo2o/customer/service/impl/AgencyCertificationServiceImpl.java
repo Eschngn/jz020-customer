@@ -67,18 +67,28 @@ public class AgencyCertificationServiceImpl extends ServiceImpl<AgencyCertificat
      */
     @Override
     public AgencyCertification submitAuth(AgencyCertificationAuditAddReqDTO agencyCertificationAuditAddReqDTO) {
+        // 修改 agency_certification 表
         // 机构人员 id
-        Long workerId = UserContext.currentUserId();
+        Long agencyId = UserContext.currentUserId();
         // dto转换为实体
         AgencyCertification agencyCertification = BeanUtil.toBean(agencyCertificationAuditAddReqDTO, AgencyCertification.class);
-        agencyCertification.setId(workerId);
+        agencyCertification.setId(agencyId);
         // 设置认证状态为认证中
         agencyCertification.setCertificationStatus(1);
+        agencyCertification.setCreateTime(LocalDateTime.now());
+        agencyCertification.setUpdateTime(LocalDateTime.now());
         // 保存
         boolean savedOrUpdate = saveOrUpdate(agencyCertification);
         if(!savedOrUpdate){
             throw new BadRequestException("认证申请失败");
         }
+
+        // 修改 agency_audit 表
+        AgencyAudit agencyAudit = new AgencyAudit();
+        agencyAudit.setId(agencyId);
+        agencyAudit.setAuditStatus(0);
+        agencyAudit.setUpdateTime(LocalDateTime.now());
+        agencyAuditMapper.insert(agencyAudit);
         return agencyCertification;
 
     }

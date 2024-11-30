@@ -71,17 +71,26 @@ public class WorkerCertificationServiceImpl extends ServiceImpl<WorkerCertificat
      */
     @Override
     public WorkerCertification submitAuth(WorkerCertificationAuditAddReqDTO workerCertificationAuditAddReqDTO) {
+        // 修改 worker_certification 表
         // 服务人员 id
-        Long userId = UserContext.currentUserId();
+        Long workerId = UserContext.currentUserId();
         WorkerCertification workerCertification = BeanUtils.toBean(workerCertificationAuditAddReqDTO, WorkerCertification.class);
-        workerCertification.setId(userId);
+        workerCertification.setId(workerId);
         // 设置认证状态为认证中
         workerCertification.setCertificationStatus(1);
+        workerCertification.setCreateTime(LocalDateTime.now());
+        workerCertification.setUpdateTime(LocalDateTime.now());
         boolean savedOrUpdate = saveOrUpdate(workerCertification);
         if (!savedOrUpdate) {
             throw new BadRequestException("提交认证申请失败");
         }
 
+        // 修改 worker_audit 表
+        WorkerAudit workerAudit = new WorkerAudit();
+        workerAudit.setId(workerId);
+        workerAudit.setAuditStatus(0);
+        workerAudit.setUpdateTime(LocalDateTime.now());
+        workerAuditMapper.insert(workerAudit);
         return workerCertification;
     }
 
