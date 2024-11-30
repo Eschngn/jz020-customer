@@ -10,7 +10,9 @@ import com.jzo2o.common.expcetions.BadRequestException;
 import com.jzo2o.common.model.PageResult;
 import com.jzo2o.common.utils.BeanUtils;
 import com.jzo2o.customer.enums.CertificationStatusEnum;
+import com.jzo2o.customer.mapper.WorkerAuditMapper;
 import com.jzo2o.customer.mapper.WorkerCertificationMapper;
+import com.jzo2o.customer.model.domain.WorkerAudit;
 import com.jzo2o.customer.model.domain.WorkerCertification;
 import com.jzo2o.customer.model.dto.WorkerCertificationUpdateDTO;
 import com.jzo2o.customer.model.dto.request.WorkerCertificationAuditAddReqDTO;
@@ -21,8 +23,11 @@ import com.jzo2o.customer.service.IWorkerCertificationService;
 import com.jzo2o.mvc.utils.UserContext;
 import com.jzo2o.mysql.utils.PageHelperUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -36,7 +41,8 @@ import javax.annotation.Resource;
 public class WorkerCertificationServiceImpl extends ServiceImpl<WorkerCertificationMapper, WorkerCertification> implements IWorkerCertificationService {
     @Resource
     private WorkerCertificationMapper workerCertificationMapper;
-
+    @Resource
+    private WorkerAuditMapper workerAuditMapper;
 
 
     /**
@@ -60,29 +66,87 @@ public class WorkerCertificationServiceImpl extends ServiceImpl<WorkerCertificat
 
     /**
      * 服务端 - 提交认证申请
+     *
      * @param workerCertificationAuditAddReqDTO
      */
     @Override
     public WorkerCertification submitAuth(WorkerCertificationAuditAddReqDTO workerCertificationAuditAddReqDTO) {
+        // 修改 worker_certification 表
         // 服务人员 id
-        Long userId = UserContext.currentUserId();
+        Long workerId = UserContext.currentUserId();
         WorkerCertification workerCertification = BeanUtils.toBean(workerCertificationAuditAddReqDTO, WorkerCertification.class);
-        workerCertification.setId(userId);
+        workerCertification.setId(workerId);
         // 设置认证状态为认证中
         workerCertification.setCertificationStatus(1);
+        workerCertification.setCreateTime(LocalDateTime.now());
+        workerCertification.setUpdateTime(LocalDateTime.now());
         boolean savedOrUpdate = saveOrUpdate(workerCertification);
-        if(!savedOrUpdate){
+        if (!savedOrUpdate) {
             throw new BadRequestException("提交认证申请失败");
         }
 
+        // 修改 worker_audit 表
+        WorkerAudit workerAudit = new WorkerAudit();
+        workerAudit.setId(workerId);
+        workerAudit.setAuditStatus(0);
+        workerAudit.setUpdateTime(LocalDateTime.now());
+        workerAuditMapper.insert(workerAudit);
         return workerCertification;
     }
 
 
+    /**
+     * 运营端 - 服务人员认证信息分页查询
+     * @param workerCertificationAuditPageQueryReqDTO
+     * @return
+     */
     @Override
     public PageResult<WorkerCertificationAuditResDTO> page(WorkerCertificationAuditPageQueryReqDTO workerCertificationAuditPageQueryReqDTO) {
         PageResult<WorkerCertificationAuditResDTO> pageResult = PageHelperUtils
                 .selectPage(workerCertificationAuditPageQueryReqDTO, () -> workerCertificationMapper.queryWorkerCertification());
         return pageResult;
+    }
+
+    /**
+     * 运营端 - 审核服务人员认证信息
+     *
+     * @param id
+     * @param certificationStatus
+     * @param rejectReason
+     */
+    @Override
+    @Transactional
+    public void audit(Long id, Integer certificationStatus, String rejectReason) {
+        // 更新 worker_certification 表
+        LambdaUpdateWrapper<WorkerCertification> updateWrapper = Wrappers.<WorkerCertification>lambdaUpdate()
+                .eq(WorkerCertification::getId, id)
+                .set(WorkerCertification::getCertificationStatus, certificationStatus)
+                .set(WorkerCertification::getUpdateTime, LocalDateTime.now());
+
+        if (certificationStatus == 2) {
+            updateWrapper.set(WorkerCertification::getCertificationTime, LocalDateTime.now());
+        }
+        boolean updated = update(updateWrapper);
+        if (!updated) {
+            throw new BadRequestException("审核认证信息失败");
+        }
+        // 更新 worker_audit 表
+        WorkerAudit workerAudit = workerAuditMapper.selectById(id);
+        if (workerAudit == null) {
+            workerAudit = new WorkerAudit();
+            workerAudit.setId(id);
+            workerAuditMapper.insert(workerAudit);
+        }
+        workerAudit.setAuditStatus(1);
+        workerAudit.setRejectReason(rejectReason);
+        workerAudit.setAuditTime(LocalDateTime.now());
+        workerAudit.setUpdateTime(LocalDateTime.now());
+        workerAudit.setAuditorId(UserContext.currentUserId());
+        workerAudit.setAuditorName(UserContext.currentUser().getName());
+        int updatedById = workerAuditMapper.updateById(workerAudit);
+        if (updatedById==0) {
+            throw new BadRequestException("审核认证信息失败");
+        }
+
     }
 }

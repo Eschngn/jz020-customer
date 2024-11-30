@@ -31,11 +31,8 @@ public class WorkerCertificationController {
     public WorkerCertificationResDTO queryById(@PathVariable("id") Long id) {
         return BeanUtil.toBean(workerCertificationService.getById(id), WorkerCertificationResDTO.class);
     }
-    /**
-     * 分页查询认证审核列表
-     * @param workerCertificationAuditPageQueryReqDTO
-     * @return
-     */
+
+
 
 
 }
