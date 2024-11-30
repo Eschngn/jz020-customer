@@ -41,4 +41,11 @@ public interface IAgencyCertificationService extends IService<AgencyCertificatio
      */
     PageResult<AgencyCertificationAuditResDTO> page(AgencyCertificationAuditPageQueryReqDTO agencyCertificationAuditPageQueryReqDTO);
 
+    /**
+     * 运营端 - 审核机构认证信息
+     * @param id
+     * @param certificationStatus
+     * @param rejectReason
+     */
+    void audit(Long id, Integer certificationStatus, String rejectReason);
 }

@@ -8,7 +8,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jzo2o.common.expcetions.BadRequestException;
 import com.jzo2o.common.model.PageResult;
 import com.jzo2o.customer.enums.CertificationStatusEnum;
+import com.jzo2o.customer.mapper.AgencyAuditMapper;
 import com.jzo2o.customer.mapper.AgencyCertificationMapper;
+import com.jzo2o.customer.model.domain.AgencyAudit;
 import com.jzo2o.customer.model.domain.AgencyCertification;
 import com.jzo2o.customer.model.dto.AgencyCertificationUpdateDTO;
 import com.jzo2o.customer.model.dto.request.AgencyCertificationAuditAddReqDTO;
@@ -20,6 +22,7 @@ import com.jzo2o.mysql.utils.PageHelperUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -35,6 +38,8 @@ public class AgencyCertificationServiceImpl extends ServiceImpl<AgencyCertificat
     @Resource
     private AgencyCertificationMapper agencyCertificationMapper;
 
+    @Resource
+    private AgencyAuditMapper agencyAuditMapper;
 
     /**
      * 根据机构id更新
@@ -88,6 +93,39 @@ public class AgencyCertificationServiceImpl extends ServiceImpl<AgencyCertificat
         PageResult<AgencyCertificationAuditResDTO> pageResult = PageHelperUtils
                 .selectPage(agencyCertificationAuditPageQueryReqDTO, () -> agencyCertificationMapper.queryAgencyCertification());
         return pageResult;
+    }
+
+    /**
+     * 运营端 - 审核机构认证信息
+     * @param id
+     * @param certificationStatus
+     * @param rejectReason
+     */
+    @Override
+    public void audit(Long id, Integer certificationStatus, String rejectReason) {
+        // 更新 agency_certification 表
+        LambdaUpdateWrapper<AgencyCertification> updateWrapper = Wrappers.<AgencyCertification>lambdaUpdate()
+                .eq(AgencyCertification::getId, id)
+                .set(AgencyCertification::getCertificationStatus, certificationStatus)
+                .set(AgencyCertification::getUpdateTime, LocalDateTime.now());
+        if(certificationStatus == 2){
+            updateWrapper=updateWrapper.set(AgencyCertification::getCertificationTime, LocalDateTime.now());
+        }
+        update(updateWrapper);
+        // 更新 agency_audit 表
+        AgencyAudit agencyAudit = agencyAuditMapper.selectById(id);
+        if(agencyAudit == null) {
+            agencyAudit = new AgencyAudit();
+            agencyAudit.setId(id);
+            agencyAuditMapper.insert(agencyAudit);
+        }
+        agencyAudit.setAuditStatus(1);
+        agencyAudit.setRejectReason(rejectReason);
+        agencyAudit.setAuditTime(LocalDateTime.now());
+        agencyAudit.setUpdateTime(LocalDateTime.now());
+        agencyAudit.setAuditorId(UserContext.currentUserId());
+        agencyAudit.setAuditorName(UserContext.currentUser().getName());
+        agencyAuditMapper.updateById(agencyAudit);
     }
 
 
