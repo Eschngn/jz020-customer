@@ -33,6 +33,11 @@ public interface IWorkerCertificationService extends IService<WorkerCertificatio
      */
     WorkerCertification submitAuth(WorkerCertificationAuditAddReqDTO workerCertificationAuditAddReqDTO);
 
+    /**
+     * 运营端 - 服务人员认证信息分页查询
+     * @param workerCertificationAuditPageQueryReqDTO
+     * @return
+     */
     PageResult<WorkerCertificationAuditResDTO> page(WorkerCertificationAuditPageQueryReqDTO workerCertificationAuditPageQueryReqDTO);
 
     /**

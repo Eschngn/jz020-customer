@@ -6,14 +6,20 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jzo2o.common.expcetions.BadRequestException;
+import com.jzo2o.common.model.PageResult;
 import com.jzo2o.customer.enums.CertificationStatusEnum;
 import com.jzo2o.customer.mapper.AgencyCertificationMapper;
 import com.jzo2o.customer.model.domain.AgencyCertification;
 import com.jzo2o.customer.model.dto.AgencyCertificationUpdateDTO;
 import com.jzo2o.customer.model.dto.request.AgencyCertificationAuditAddReqDTO;
+import com.jzo2o.customer.model.dto.request.AgencyCertificationAuditPageQueryReqDTO;
+import com.jzo2o.customer.model.dto.response.AgencyCertificationAuditResDTO;
 import com.jzo2o.customer.service.IAgencyCertificationService;
 import com.jzo2o.mvc.utils.UserContext;
+import com.jzo2o.mysql.utils.PageHelperUtils;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
 
 /**
  * <p>
@@ -26,6 +32,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class AgencyCertificationServiceImpl extends ServiceImpl<AgencyCertificationMapper, AgencyCertification> implements IAgencyCertificationService {
 
+    @Resource
+    private AgencyCertificationMapper agencyCertificationMapper;
 
 
     /**
@@ -47,6 +55,11 @@ public class AgencyCertificationServiceImpl extends ServiceImpl<AgencyCertificat
         super.update(updateWrapper);
     }
 
+    /**
+     * 机构端 - 提交认证申请
+     * @param agencyCertificationAuditAddReqDTO
+     * @return
+     */
     @Override
     public AgencyCertification submitAuth(AgencyCertificationAuditAddReqDTO agencyCertificationAuditAddReqDTO) {
         // 机构人员 id
@@ -63,6 +76,18 @@ public class AgencyCertificationServiceImpl extends ServiceImpl<AgencyCertificat
         }
         return agencyCertification;
 
+    }
+
+    /**
+     * 运营端 - 机构认证信息分页查询
+     * @param agencyCertificationAuditPageQueryReqDTO
+     * @return
+     */
+    @Override
+    public PageResult<AgencyCertificationAuditResDTO> page(AgencyCertificationAuditPageQueryReqDTO agencyCertificationAuditPageQueryReqDTO) {
+        PageResult<AgencyCertificationAuditResDTO> pageResult = PageHelperUtils
+                .selectPage(agencyCertificationAuditPageQueryReqDTO, () -> agencyCertificationMapper.queryAgencyCertification());
+        return pageResult;
     }
 
 

@@ -86,6 +86,11 @@ public class WorkerCertificationServiceImpl extends ServiceImpl<WorkerCertificat
     }
 
 
+    /**
+     * 运营端 - 服务人员认证信息分页查询
+     * @param workerCertificationAuditPageQueryReqDTO
+     * @return
+     */
     @Override
     public PageResult<WorkerCertificationAuditResDTO> page(WorkerCertificationAuditPageQueryReqDTO workerCertificationAuditPageQueryReqDTO) {
         PageResult<WorkerCertificationAuditResDTO> pageResult = PageHelperUtils
