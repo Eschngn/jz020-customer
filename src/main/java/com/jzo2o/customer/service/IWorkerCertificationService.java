@@ -34,4 +34,12 @@ public interface IWorkerCertificationService extends IService<WorkerCertificatio
     WorkerCertification submitAuth(WorkerCertificationAuditAddReqDTO workerCertificationAuditAddReqDTO);
 
     PageResult<WorkerCertificationAuditResDTO> page(WorkerCertificationAuditPageQueryReqDTO workerCertificationAuditPageQueryReqDTO);
+
+    /**
+     * 运营端 - 审核服务人员认证信息
+     * @param id
+     * @param certificationStatus
+     * @param rejectReason
+     */
+    void audit(Long id, Integer certificationStatus, String rejectReason);
 }

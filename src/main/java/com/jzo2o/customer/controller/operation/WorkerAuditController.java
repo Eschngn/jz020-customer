@@ -6,9 +6,7 @@ import com.jzo2o.customer.model.dto.response.WorkerCertificationAuditResDTO;
 import com.jzo2o.customer.service.IWorkerCertificationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource; /**
  * @author Wilson
@@ -24,7 +22,7 @@ public class WorkerAuditController {
     private IWorkerCertificationService workerCertificationService;
 
     /**
-     * 分页查询认证审核列表
+     * 运营端 - 分页查询认证审核列表
      * @param workerCertificationAuditPageQueryReqDTO
      * @return
      */
@@ -32,5 +30,17 @@ public class WorkerAuditController {
     @ApiOperation("分页查询认证审核列表")
     public PageResult<WorkerCertificationAuditResDTO> page(WorkerCertificationAuditPageQueryReqDTO workerCertificationAuditPageQueryReqDTO) {
         return workerCertificationService.page(workerCertificationAuditPageQueryReqDTO);
+    }
+
+    /**
+     * 运营端 - 审核服务人员认证信息
+     * @param id
+     * @param certificationStatus
+     * @param rejectReason
+     */
+    @PutMapping("/audit/{id}")
+    @ApiOperation("审核服务人员认证信息")
+    public void audit(@PathVariable("id") Long id,@RequestParam("certificationStatus") Integer certificationStatus, @RequestParam("rejectReason") String rejectReason){
+        workerCertificationService.audit(id,certificationStatus,rejectReason);
     }
 }
